@@ -14,13 +14,14 @@ app.add_middleware(
 
 @app.get("/get")
 async def root(id: str = Query(None)):
-    response = {
-        "message": "Hello World",
-        "client_id": id  # Includi l'ID nella risposta per confermare che è stato ricevuto
-    }
-    print(response)
-
-    return json.dumps((f"Rispondo per conto di: {id}", 'Risposta'))
+    # response = {
+    #     "message": "Hello World",
+    #     "client_id": id  # Includi l'ID nella risposta per confermare che è stato ricevuto
+    # }
+    # print(response)
+    #
+    # return json.dumps((f"Rispondo per conto di: {id}", 'Risposta'))
+    return json.dumps((f"Rispondo per conto di: ", 'Risposta'))
 
 
 # @app.get("/get")
