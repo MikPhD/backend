@@ -12,7 +12,6 @@ app.add_middleware(
     allow_headers=["*"],  # Permette tutti gli header
 )
 
-
 @app.get("/get")
 async def root(id: str = Query(None)):
     # response = {
