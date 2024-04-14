@@ -7,12 +7,20 @@ import requests
 import soundfile as sf
 import speech_recognition as sr
 from flask import Flask, jsonify, request
+from chatbot import OpenAIBot
+import utils
+
+######################## Check if the required environment variables are set
+required_variables = ['OPENAI_API_KEY', 'ALFRED_ASSISTANT_ID', 'FLASK_KEY', 'WHATSAPP_TOKEN', 'VERIFY_TOKEN']
+missing_values = [value for value in required_variables if os.environ.get(value) is None]
+if len(missing_values) > 0:
+    print(f'The following environment values are missing in your .env: {", ".join(missing_values)}')
+    exit(1)
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('FLASK_KEY')
 
-
-# OpenAi API key
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai_client = OpenAIBot(os.environ.get('OPENAI_API_KEY'), os.environ.get('ALFRED_ASSISTANT_ID'))
 
 # Access token for your WhatsApp business account app
 whatsapp_token = os.environ.get("WHATSAPP_TOKEN")
@@ -123,6 +131,26 @@ def remove_last_message_from_log(phone_number):
 
 # make request to OpenAI
 def make_openai_request(message, from_number):
+    thread_id = openai_client.start_conversation()
+    openai_client.create_message(thread_id, message)
+    run = openai_client.create_run(thread_id)
+    run, failed = openai_client.wait_for_run(thread_id, run)
+
+    if failed:
+        return "Sorry, I'm currently unavailable. Please try again later."
+
+    answer = openai_client.collect_response(thread_id)
+    function, answer = utils.check_trigger_functions(answer)
+
+    # answer = utils.text_to_html(answer)
+    answer = utils.remove_keywords(answer)
+    # print(answer, function)
+
+    # utils.log_conversation(logger, thread_id, user_text, answer)
+
+    if function == 'hands_off':
+        return "Ok, I'll pass this on to a human assistant."
+
     # try:
     #     message_log = update_message_log(message, from_number, "user")
     #     response = openai.ChatCompletion.create(
@@ -137,7 +165,7 @@ def make_openai_request(message, from_number):
     #     print(f"openai error: {e}")
     #     response_message = "Sorry, the OpenAI API is currently overloaded or offline. Please try again later."
     #     remove_last_message_from_log(from_number)
-    return 'ciao'
+    return answer
 
 
 # handle WhatsApp messages of different type
