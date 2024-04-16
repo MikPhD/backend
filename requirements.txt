@@ -5,3 +5,4 @@ soundfile==0.12.1
 pydub==0.25.1
 Flask==2.2.2
 Werkzeug==2.2.2
+fuzzywuzzy==0.18.0
